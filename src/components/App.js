@@ -8,6 +8,8 @@ import {
     loadExchange
 } from '../store/interactions'
 import {accountSelector, contractsLoadedSelector} from '../store/selectors'
+import Navbar from "./Navbar";
+import Content from "./Content";
 
 class App extends Component {
     componentWillMount() {
@@ -34,8 +36,8 @@ class App extends Component {
         console.log("exchange props", this.props.account)
         return (
             <div>
-                <h1>Hello world</h1>
-
+                <Navbar/>
+                {this.props.contractsLoaded ? <Content/> : <div className="content"></div>}
             </div>
         );
     }
