@@ -63,30 +63,30 @@ class MyTransactions extends Component {
                     My Transactions
                 </div>
                 <div className="card-body">
-                    <Tabs defaultActiveKey="trades" className="bg-dark text-white">
-                        <Tab eventKey="trades" title="Trades" className="bg-dark">
-                            <table className="table table-dark table-sm small">
-                                <thead>
-                                <tr>
-                                    <th>Time</th>
-                                    <th>LOL</th>
-                                    <th>LOL/ETH</th>
-                                </tr>
-                                </thead>
-                                {this.props.showMyFilledOrders ? showMyFilledOrders(this.props) :
-                                    <Spinner type="table"/>}
-                            </table>
-                        </Tab>
+                    <Tabs defaultActiveKey="orders" className="bg-dark text-white">
                         <Tab eventKey="orders" title="Orders">
                             <table className="table table-dark table-sm small">
                                 <thead>
                                 <tr>
                                     <th>Amount</th>
-                                    <th>LOL/ETH</th>
+                                    <th>RSL/ETH</th>
                                     <th>Cancel</th>
                                 </tr>
                                 </thead>
                                 {this.props.showMyOpenOrders ? showMyOpenOrders(this.props) : <Spinner type="table"/>}
+                            </table>
+                        </Tab>
+                        <Tab eventKey="trades" title="Trades" className="bg-dark">
+                            <table className="table table-dark table-sm small">
+                                <thead>
+                                <tr>
+                                    <th>Time</th>
+                                    <th>RSL</th>
+                                    <th>RSL/ETH</th>
+                                </tr>
+                                </thead>
+                                {this.props.showMyFilledOrders ? showMyFilledOrders(this.props) :
+                                    <Spinner type="table"/>}
                             </table>
                         </Tab>
                     </Tabs>
@@ -111,13 +111,3 @@ function mapStateToProps(state) {
 }
 
 export default connect(mapStateToProps)(MyTransactions);
-
-
-
-
-
-
-
-
-
-

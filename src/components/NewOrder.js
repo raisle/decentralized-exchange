@@ -44,7 +44,7 @@ const showForm = (props) => {
                     makeBuyOrder(dispatch, exchange, token, web3, buyOrder, account)
                 }}>
                     <div className="form-group small">
-                        <label>Buy Amount (LOL)</label>
+                        <label>Buy Amount (RSL)</label>
                         <div className="input-group">
                             <input
                                 type="text"
@@ -56,7 +56,7 @@ const showForm = (props) => {
                         </div>
                     </div>
                     <div className="form-group small">
-                        <label>Buy Price</label>
+                        <label>Buy Price (in ETH)</label>
                         <div className="input-group">
                             <input
                                 type="text"
@@ -80,7 +80,7 @@ const showForm = (props) => {
                     makeSellOrder(dispatch, exchange, token, web3, sellOrder, account)
                 }}>
                     <div className="form-group small">
-                        <label>Buy Sell (LOL)</label>
+                        <label>Sell Amount (RSL)</label>
                         <div className="input-group">
                             <input
                                 type="text"
@@ -92,7 +92,7 @@ const showForm = (props) => {
                         </div>
                     </div>
                     <div className="form-group small">
-                        <label>Sell Price</label>
+                        <label>Sell Price (in ETH)</label>
                         <div className="input-group">
                             <input
                                 type="text"

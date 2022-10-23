@@ -302,7 +302,7 @@ contract('Exchange', ([deployer, feeAccount, user1, user2]) => {
             describe('failure', () => {
 
                 it('rejects invalid order ids', () => {
-                    const invalidOrderId = 99999
+                    const invalidOrderId = -1
                     exchange.fillOrder(invalidOrderId, {from: user2}).should.be.rejectedWith(EVM_REVERT)
                 })
 

@@ -40,7 +40,7 @@ module.exports = async function (callback) {
         const user2 = accounts[1]
 
         // User .1 Deposits Ether
-        await exchange.depositEther({from: user1, value: ether(.1)})
+        await exchange.depositEther({from: user1, value: ether(2)})
         console.log(`Deposited ${amount} Ether from ${user1}`)
 
         // User 2 Approves Tokens
@@ -62,7 +62,7 @@ module.exports = async function (callback) {
         result = await exchange.makeOrder(token.address, tokens(100), ETHER_ADDRESS, ether(0.01), {from: user1})
         console.log(`Made order from ${user1}`)
 
-        // User 1 cancells order
+        // User 1 cancels order
         orderId = result.logs[0].args.id
         await exchange.cancelOrder(orderId, {from: user1})
         console.log(`Cancelled order from ${user1}`)
@@ -73,12 +73,12 @@ module.exports = async function (callback) {
 
         // User 1 makes order
         result = await exchange.makeOrder(token.address, tokens(100), ETHER_ADDRESS, ether(0.01), {from: user1})
-        console.log(`Made order from ${user1}`)
+        console.log(`Made order from ${user1}`) //
 
         // User 2 fills order
         orderId = result.logs[0].args.id
         await exchange.fillOrder(orderId, {from: user2})
-        console.log(`Filled order from ${user1}`)
+        console.log(`Filled order from ${user2}`)
 
         // Wait 1 second
         await wait(1)
@@ -90,7 +90,7 @@ module.exports = async function (callback) {
         // User 2 fills another order
         orderId = result.logs[0].args.id
         await exchange.fillOrder(orderId, {from: user2})
-        console.log(`Filled order from ${user1}`)
+        console.log(`Filled order from ${user2}`)
 
         // Wait 1 second
         await wait(1)
@@ -102,7 +102,7 @@ module.exports = async function (callback) {
         // User 2 fills final order
         orderId = result.logs[0].args.id
         await exchange.fillOrder(orderId, {from: user2})
-        console.log(`Filled order from ${user1}`)
+        console.log(`Filled order from ${user2}`)
 
         // Wait 1 second
         await wait(1)

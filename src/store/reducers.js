@@ -80,6 +80,10 @@ function exchange(state = {}, action) {
             return {...state, balancesLoading: true}
         case 'BALANCES_LOADED':
             return {...state, balancesLoading: false}
+        case 'SHOULD_UPDATE_BALANCES':
+            return {...state, balancesLoading: true}
+        case 'ETHER_BALANCE_AMOUNT_CHANGED':
+            return {...state, etherBalanceAmount: action.amount}
         case 'ETHER_DEPOSIT_AMOUNT_CHANGED':
             return {...state, etherDepositAmount: action.amount}
         case 'ETHER_WITHDRAW_AMOUNT_CHANGED':
@@ -127,7 +131,7 @@ function exchange(state = {}, action) {
         case 'SELL_ORDER_PRICE_CHANGED':
             return {...state, sellOrder: {...state.sellOrder, price: action.price}}
         case 'SELL_ORDER_MAKING':
-            return {...state, sellOrder: {...state.sellOrder, amount: null, price: null, making: true}}
+            return {...state, sellOrder: {...state.sellOrder, amount: null, price: action.price, making: true}}
 
         default:
             return state

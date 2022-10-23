@@ -82,7 +82,7 @@ contract('Token', ([deployer, receiver, exchange]) => {
 
                 // Attempt transfer tokens, when you have none
                 invalidAmount = tokens(10) //
-                await token.transfer(deployer, invalidAmount, {from: receiver}).should.be.rejectedWith(EVM_REVERT);
+                await token.transfer(deployer, invalidAmount, {from: receiver}).should.be.rejectedWith('Insufficient Balance');
             })
 
             it('rejects invalid recepients', async () => {

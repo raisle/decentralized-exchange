@@ -23,5 +23,5 @@ export const formatBalance = (balance) => {
 }
 
 export const formatUserBalance = (balance) =>{
-   return !isNaN(balance) ? balance : 0
+   return !isNaN(balance) ? balance : "..."
 }

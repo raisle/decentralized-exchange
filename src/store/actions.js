@@ -126,6 +126,13 @@ export function etherDepositAmountChanged(amount) {
     }
 }
 
+export function etherBalanceAmountChanged(amount) {
+    return {
+        type: 'ETHER_BALANCE_AMOUNT_CHANGED',
+        amount
+    }
+}
+
 export function etherWithdrawAmountChanged(amount) {
     return {
         type: 'ETHER_WITHDRAW_AMOUNT_CHANGED',
