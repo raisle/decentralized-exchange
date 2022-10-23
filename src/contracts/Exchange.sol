@@ -13,7 +13,7 @@ contract Exchange {
     address constant ETHER = address(0); // Allows us to store Ether in Token mapping with blank address
     mapping(address => mapping(address => uint256)) public tokens;
     mapping(uint256 => _Order) public orders;
-    uint256 public orderCount;
+    uint256 public orderCount; // Amount of orders made by all the users of the exchange
     mapping(uint256 => bool) public orderCancelled;
     mapping(uint256 => bool) public orderFilled;
 
@@ -75,7 +75,7 @@ contract Exchange {
     }
 
     function withdrawEther(uint256 _amount) public {
-        require(tokens[ETHER][msg.sender] >= _amount);
+        require(tokens[ETHER][msg.sender] >= _amount, "Insufficient Balance");
         tokens[ETHER][msg.sender] = tokens[ETHER][msg.sender].sub(_amount);
         msg.sender.transfer(_amount);
         emit Withdraw(ETHER, msg.sender, _amount, tokens[ETHER][msg.sender]);
@@ -90,7 +90,7 @@ contract Exchange {
 
     function withdrawToken(address _token, uint256 _amount) public {
         require(_token != ETHER);
-        require(tokens[_token][msg.sender] >= _amount);
+        require(tokens[_token][msg.sender] >= _amount, "Insufficient Balance");
         tokens[_token][msg.sender] = tokens[_token][msg.sender].sub(_amount);
         require(Token(_token).transfer(msg.sender, _amount));
         emit Withdraw(_token, msg.sender, _amount, tokens[_token][msg.sender]);
@@ -100,7 +100,23 @@ contract Exchange {
         return tokens[_token][_user];
     }
 
+    /*
+    * @param _tokenGet - token's address, user wants to buy
+    * @param _amountGet - amount of token, user wants to buy
+    * @param _tokenGive - token's address, with which user is buying (the token, that user has)
+    * @param _amountGive - how much user is willing to spend of token he has
+    */
     function makeOrder(address _tokenGet, uint256 _amountGet, address _tokenGive, uint256 _amountGive) public {
+        string memory etherErrorMessage = "Insufficient Ether";
+        string memory rslErrorMessage = "Insufficient RSL";
+        if (_tokenGive == ETHER) {
+            // Buy RSL order
+            // require(_amountGive < msg.sender.balance, etherErrorMessage);
+            // todo msg.sender.balance - is not checking the amount of eth available on the exchange, but on wallet
+        } else {
+            // Sell RSL order
+            require(_amountGive < tokens[_tokenGive][msg.sender], rslErrorMessage);
+        }
         orderCount = orderCount.add(1);
         orders[orderCount] = _Order(orderCount, msg.sender, _tokenGet, _amountGet, _tokenGive, _amountGive, now);
         emit Order(orderCount, msg.sender, _tokenGet, _amountGet, _tokenGive, _amountGive, now);
@@ -116,11 +132,18 @@ contract Exchange {
         emit Cancel(_order.id, msg.sender, _order.tokenGet, _order.amountGet, _order.tokenGive, _order.amountGive, now);
     }
 
-    function fillOrder(uint256 _id) public {
+    function fillOrder(uint256 _id) payable public {
         require(_id > 0 && _id <= orderCount);
-        require(!orderFilled[_id]);
-        require(!orderCancelled[_id]);
+        require(!orderFilled[_id], "Order was already filled");
+        require(!orderCancelled[_id], "Order was cancelled");
         _Order storage _order = orders[_id];
+        if (_order.tokenGet == ETHER) {
+            // Sell RSL, red order
+            require(tokens[ETHER][msg.sender] > _order.amountGet, "Insufficient Deposited Ether");
+        } else {
+            // Buy RSL, green order
+            require(tokens[_order.tokenGet][msg.sender] > _order.amountGet, "Insufficient Deposited RSL");
+        }
         _trade(_order.id, _order.user, _order.tokenGet, _order.amountGet, _order.tokenGive, _order.amountGive);
         orderFilled[_order.id] = true;
     }

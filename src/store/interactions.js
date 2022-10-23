@@ -24,6 +24,27 @@ import {
 import Token from '../abis/Token.json'
 import Exchange from '../abis/Exchange.json'
 import {ETHER_ADDRESS} from '../helpers'
+import {
+    handleDepositEtherError,
+    handleDepositTokenError,
+    handleFillOrderError,
+    handleMakeBuyError,
+    handleMakeSellError,
+    handleWithdrawEtherError,
+    handleWithdrawTokenError
+} from "../errorHandler";
+
+window.onload = function () {
+    if (window.ethereum !== 'undefined') {
+        this.ethereum.on("accountsChanged", handleAccountsChanged)
+    } else {
+        showAlertInstallMetaMask()
+    }
+}
+
+const handleAccountsChanged = (a) => {
+    window.location.reload();
+}
 
 export const loadWeb3 = async (dispatch) => {
     if (typeof window.ethereum !== 'undefined') {
@@ -31,8 +52,7 @@ export const loadWeb3 = async (dispatch) => {
         dispatch(web3Loaded(web3))
         return web3
     } else {
-        window.alert('Please install MetaMask')
-        window.location.assign("https://metamask.io/")
+        showAlertInstallMetaMask()
     }
 }
 
@@ -44,7 +64,7 @@ export const loadAccount = async (web3, dispatch) => {
         dispatch(balancesLoaded())
         return account
     } else {
-        window.alert('Please login with MetaMask')
+        logUserIsNotLoggedItWithMetaMask()
         return null
     }
 }
@@ -58,12 +78,10 @@ export const connectToMetamask = async (dispatch) => {
             dispatch(balancesLoaded())
             return account
         } else {
-            window.alert('Please login with MetaMask')
-            return null
+            showAlertLogInWithMetaMask()
         }
     } else {
-        window.alert('Please install MetaMask')
-        window.location.assign("https://metamask.io/")
+        showAlertInstallMetaMask()
     }
 }
 
@@ -112,25 +130,31 @@ export const loadAllOrders = async (exchange, dispatch) => {
     dispatch(allOrdersLoaded(allOrders))
 }
 
-export const subscribeToEvents = async (exchange, dispatch) => {
+export const subscribeToEvents = async (exchange, dispatch, web3, token, account) => {
     exchange.events.Cancel({}, (error, event) => {
         dispatch(orderCancelled(event.returnValues))
     })
 
     exchange.events.Trade({}, (error, event) => {
+        console.log("subscribeToEvents Trade")
         dispatch(orderFilled(event.returnValues))
+        window.location.reload();
     })
 
-    exchange.events.Deposit({}, (error, event) => {
-        dispatch(balancesLoaded())
+    exchange.events.Deposit({}, async (error, event) => {
+        console.log("subscribeToEvents Deposit")
+        window.location.reload();
     })
 
-    exchange.events.Withdraw({}, (error, event) => {
-        dispatch(balancesLoaded())
+    exchange.events.Withdraw({}, async (error, event) => {
+        console.log("subscribeToEvents Withdraw")
+        window.location.reload();
     })
 
     exchange.events.Order({}, (error, event) => {
         dispatch(orderMade(event.returnValues))
+        window.location.reload();
+
     })
 }
 
@@ -146,118 +170,154 @@ export const cancelOrder = (dispatch, exchange, order, account) => {
 }
 
 export const fillOrder = (dispatch, exchange, order, account) => {
-    exchange.methods.fillOrder(order.id).send({from: account})
-        .on('transactionHash', (hash) => {
-            dispatch(orderFilling())
-        })
-        .on('error', (error) => {
-            console.log("Error during filling order: ", error)
-            window.alert('There was an error during filling order!')
-        })
+    if (account !== undefined) {
+        console.log("account: ", account)
+
+        exchange.methods.fillOrder(order.id).send({from: account})
+            .on('transactionHash', (hash) => {
+                dispatch(orderFilling())
+            })
+            .on('error', (error) => {
+                handleFillOrderError(error)
+            })
+    } else {
+        showAlertLogInWithMetaMask()
+    }
 }
 
 export const loadBalances = async (dispatch, web3, exchange, token, account) => {
     if (typeof account !== 'undefined') {
-        // Ether balance in wallet
+// Ether balance in wallet
         const etherBalance = await web3.eth.getBalance(account)
         dispatch(etherBalanceLoaded(etherBalance))
 
-        // Token balance in wallet
+// Token balance in wallet
         const tokenBalance = await token.methods.balanceOf(account).call()
         dispatch(tokenBalanceLoaded(tokenBalance))
 
-        // Ether balance in exchange
+// Ether balance in exchange
         const exchangeEtherBalance = await exchange.methods.balanceOf(ETHER_ADDRESS, account).call()
         dispatch(exchangeEtherBalanceLoaded(exchangeEtherBalance))
 
-        // Token balance in exchange
+// Token balance in exchange
         const exchangeTokenBalance = await exchange.methods.balanceOf(token.options.address, account).call()
         dispatch(exchangeTokenBalanceLoaded(exchangeTokenBalance))
 
-        // Trigger all balances loaded
+// Trigger all balances loaded
         dispatch(balancesLoaded())
     } else {
-        console.log('Please login with MetaMask')
+        logUserIsNotLoggedItWithMetaMask()
     }
 }
 
 export const depositEther = (dispatch, exchange, web3, amount, account) => {
-    exchange.methods.depositEther().send({from: account, value: web3.utils.toWei(amount, 'ether')})
-        .on('transactionHash', (hash) => {
-            dispatch(balancesLoading())
-        })
-        .on('error', (error) => {
-            console.log("Error during depositing ether: ", error)
-            window.alert(`There was an error depositing ether!`)
-        })
+    if (account !== undefined) {
+        exchange.methods.depositEther().send({from: account, value: web3.utils.toWei(amount, 'ether')})
+            .on('transactionHash', (hash) => {
+                dispatch(balancesLoading())
+            })
+            .on('error', (error) => {
+                handleDepositEtherError(error)
+            })
+    } else {
+        showAlertLogInWithMetaMask()
+    }
 }
 
 export const withdrawEther = (dispatch, exchange, web3, amount, account) => {
-    exchange.methods.withdrawEther(web3.utils.toWei(amount, 'ether')).send({from: account})
-        .on('transactionHash', (hash) => {
-            dispatch(balancesLoading())
-        })
-        .on('error', (error) => {
-            console.log("Error during withdrawing ether: ", error)
-            window.alert(`There was an error withdrawing ether!`)
-        })
+    if (account !== undefined) {
+        exchange.methods.withdrawEther(web3.utils.toWei(amount, 'ether')).send({from: account})
+            .on('transactionHash', (hash) => {
+                dispatch(balancesLoading())
+            })
+            .on('error', (error) => {
+                handleWithdrawEtherError(error)
+            })
+    } else {
+        showAlertLogInWithMetaMask()
+    }
 }
 
 export const depositToken = (dispatch, exchange, web3, token, amount, account) => {
-    amount = web3.utils.toWei(amount, 'ether')
+    if (account !== undefined) {
+        amount = web3.utils.toWei(amount, 'ether')
 
-    token.methods.approve(exchange.options.address, amount).send({from: account})
-        .on('transactionHash', (hash) => {
-            exchange.methods.depositToken(token.options.address, amount).send({from: account})
-                .on('transactionHash', (hash) => {
-                    dispatch(balancesLoading())
-                })
-                .on('error', (error) => {
-                    console.log("Error during depositing token: ", error)
-                    window.alert(`There was an error depositing token!`)
-                })
-        })
+        token.methods.approve(exchange.options.address, amount).send({from: account})
+            .on('transactionHash', (hash) => {
+                exchange.methods.depositToken(token.options.address, amount).send({from: account})
+                    .on('transactionHash', (hash) => {
+                        dispatch(balancesLoading())
+                    })
+                    .on('error', (error) => {
+                        handleDepositTokenError(error)
+                    })
+                    .on('Transfer', (from, to, value) => {
+                        console.log("Transfer event value: ", value)
+                    })
+            })
+    } else {
+        showAlertLogInWithMetaMask()
+    }
 }
 
 export const withdrawToken = (dispatch, exchange, web3, token, amount, account) => {
-    exchange.methods.withdrawToken(token.options.address, web3.utils.toWei(amount, 'ether')).send({from: account})
-        .on('transactionHash', (hash) => {
-            dispatch(balancesLoading())
-        })
-        .on('error', (error) => {
-            console.log("Error during withdrawing token: ", error)
-            window.alert(`There was an error withdrawing token!`)
-        })
+    if (account !== undefined) {
+        exchange.methods.withdrawToken(token.options.address, web3.utils.toWei(amount, 'ether')).send({from: account})
+            .on('error', function (error) {
+                handleWithdrawTokenError(error)
+            })
+    } else {
+        showAlertLogInWithMetaMask()
+    }
 }
 
 export const makeBuyOrder = (dispatch, exchange, token, web3, order, account) => {
-    const tokenGet = token.options.address
-    const amountGet = web3.utils.toWei(order.amount, 'ether')
-    const tokenGive = ETHER_ADDRESS
-    const amountGive = web3.utils.toWei((order.amount * order.price).toString(), 'ether')
+    if (account !== undefined) {
+        const tokenGet = token.options.address
+        const amountGet = web3.utils.toWei(order.amount, 'ether')
+        const tokenGive = ETHER_ADDRESS
+        const amountGive = web3.utils.toWei((order.amount * order.price).toString(), 'ether')
 
-    exchange.methods.makeOrder(tokenGet, amountGet, tokenGive, amountGive).send({from: account})
-        .on('transactionHash', (hash) => {
-            dispatch(buyOrderMaking())
-        })
-        .on('error', (error) => {
-            console.log("Error during making buy token: ", error)
-            window.alert(`There was an error making a buy token!`)
-        })
+        exchange.methods.makeOrder(tokenGet, amountGet, tokenGive, amountGive).send({from: account})
+            .on('transactionHash', (hash) => {
+                dispatch(buyOrderMaking())
+            })
+            .on('error', (error) => {
+                handleMakeBuyError(error)
+            })
+    } else {
+        showAlertLogInWithMetaMask()
+    }
 }
 
 export const makeSellOrder = (dispatch, exchange, token, web3, order, account) => {
-    const tokenGet = ETHER_ADDRESS
-    const amountGet = web3.utils.toWei((order.amount * order.price).toString(), 'ether')
-    const tokenGive = token.options.address
-    const amountGive = web3.utils.toWei(order.amount, 'ether')
+    if (account !== undefined) {
+        const tokenGet = ETHER_ADDRESS
+        const amountGet = web3.utils.toWei((order.amount * order.price).toString(), 'ether')
+        const tokenGive = token.options.address
+        const amountGive = web3.utils.toWei(order.amount, 'ether')
 
-    exchange.methods.makeOrder(tokenGet, amountGet, tokenGive, amountGive).send({from: account})
-        .on('transactionHash', (hash) => {
-            dispatch(sellOrderMaking())
-        })
-        .on('error', (error) => {
-            console.log("Error during making sell token: ", error)
-            window.alert(`There was an error making a sell token!`)
-        })
+        exchange.methods.makeOrder(tokenGet, amountGet, tokenGive, amountGive).send({from: account})
+            .on('transactionHash', (hash) => {
+                dispatch(sellOrderMaking())
+            })
+            .on('error', (error) => {
+                handleMakeSellError(error)
+            })
+    } else {
+        showAlertLogInWithMetaMask()
+    }
+}
+
+const showAlertLogInWithMetaMask = () => {
+    window.alert('Hold your horses! 🤌 You need to be logged in with MetaMask first')
+}
+
+const logUserIsNotLoggedItWithMetaMask = () => {
+    console.log('User is not logged in with MetaMask')
+}
+
+const showAlertInstallMetaMask = () => {
+    window.alert('Please install MetaMask')
+    window.location.assign("https://metamask.io/")
 }

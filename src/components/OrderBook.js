@@ -10,7 +10,6 @@ import {
 } from '../store/selectors'
 import {OverlayTrigger, Tooltip} from "react-bootstrap";
 import {fillOrder} from "../store/interactions";
-import {orderFilling} from "../store/actions";
 
 const renderOrder = (order, props) => {
     const {dispatch, exchange, account} = props
@@ -42,10 +41,15 @@ const showOrderBook = (props) => {
 
     return (
         <tbody>
+        <tr>
+            <th>RSL</th>
+            <th>ETH/RSL</th>
+            <th>ETH</th>
+        </tr>
         {orderBook.sellOrders.map((order) => renderOrder(order, props))}
         <tr>
-            <th>LOL</th>
-            <th>LOL/ETH</th>
+            <th>RSL</th>
+            <th>RSL/ETH</th>
             <th>ETH</th>
         </tr>
         {orderBook.buyOrders.map((order) => renderOrder(order, props))}

@@ -33,8 +33,8 @@ class Trades extends Component {
                             <thead>
                             <tr>
                                 <th>Time</th>
-                                <th>LOL</th>
-                                <th>LOL/ETH</th>
+                                <th>RSL</th>
+                                <th>RSL/ETH</th>
                             </tr>
                             </thead>
                             {this.props.filledOrdersLoaded ? showFilledOrders(this.props.filledOrders) :
